@@ -27,30 +27,45 @@
 
 
 
-BASEURL=http://wald.intevation.org/frs/download.php/1340
+BASEURL=http://wald.intevation.org/frs/download.php
 DIRECTORY="openvas-dev"
 WORKDIR="${HOME}/${DIRECTORY}"
-VERSION="+beta1"
-#VERSION=""
+#VERSION="+beta1"
+VERSION=""
 # version 7
 SOURCESUBDIR="openvas-libraries-7.0"
 LIBRARIES="openvas-libraries"
+LIBRARIESID="2031"
 LIBRARIESVER="7.0.10"
 SCANNER="openvas-scanner"
+SCANNERID="1959"
 SCANNERVER="4.0.6"
 MANAGER="openvas-manager"
+MANAGERID="2035"
 MANAGERVER="5.0.10"
 GREENBONE="greenbone-security-assistant"
+GREENBONEID="2039"
 GREENBONEVER="5.0.7"
 CLI="openvas-cli"
+CLIID="1083"
 CLIVER="1.3.1"
 # version 8
-#SOURCESUBDIR="openvas-libraries-7.0"
-#LIBRARIES="openvas-libraries-8.0.1"
-#SCANNER="openvas-scanner-5.0.1"
-#MANAGER="openvas-manager-6.0.1"
-#GREENBONE="greenbone-security-assistant-6.0.1"
-#CLI="openvas-cli-1.4.0"
+SOURCESUBDIR="openvas-libraries-7.0"
+LIBRARIES="openvas-libraries"
+LIBRARIESID="2015"
+LIBRARIESVER="8.0.1"
+SCANNER="openvas-scanner"
+SCANNERID="2016"
+SCANNERVER="5.0.1"
+MANAGER="openvas-manager"
+MANAGERID="2017"
+MANAGERVER="6.0.1"
+GREENBONE="greenbone-security-assistant"
+GREENBONEID="2018"
+GREENBONEVER="6.0.1"
+CLI="openvas-cli"
+CLIID="1987"
+CLIVER="1.4.0"
 
 
 setup_build() {
@@ -61,22 +76,24 @@ setup_build() {
 }
 
 install_dependencies() {
+# ubuntu 14.04
     echo "Installing needed packages"
-    sudo apt-get -y install sudo build-essential make cmake nsis pkg-config nmap libssh-dev libgnutls-dev  libglib2.0-dev libpcap-dev libgpgme11-dev uuid-dev bison libksba-dev rsync sqlite3 libsqlite3-dev wget curl alien fakeroot libmicrohttpd-dev libxml2-dev libxslt1-dev xsltproc
+    sudo apt-get -y install sudo build-essential make cmake nsis pkg-config nmap libssh-dev libgnutls-dev  libglib2.0-dev libpcap-dev libgpgme11-dev uuid-dev bison libksba-dev rsync sqlite3 libsqlite3-dev wget curl alien fakeroot libmicrohttpd-dev libxml2-dev libxslt1-dev xsltproc doxygen xmltoman sqlfairy libsnmp-dev libhiredis-dev
 }
 
 
 
 get_source() {
   Lfilebase=$1
-  Lver=$2
+  Lid=$2
+  Lver=$3
   Lfilename="${Lfilebase}-${Lver}.tar.gz"
   echo "Downloading $Lfilename"
 
   cd $WORKDIR
 
   if [ ! -f "${Lfilename}" ]; then
-    wget --directory-prefix $WORKDIR ${BASEURL}/${Lfilename}
+    wget --directory-prefix $WORKDIR ${BASEURL}/${Lid}/${Lfilename}
   fi
 }
 
@@ -91,9 +108,9 @@ extract_source() {
 }
 
 build_source() {
-  Lname=$1
-  Lrelease=$2
-  Lsubdir="${Lname}${Lrelease}"
+  Lfilebase=$1
+  Lver=$2
+  Lsubdir="${Lfilebase}-${Lver}"
 
   cd ${WORKDIR}/${Lsubdir}
 
@@ -115,16 +132,17 @@ build_source() {
 
 get_build() {
   Lsubdir=$1
-  Lver=$2
-  Lrelease=$3
+  Lid=$2
+  Lver=$3
+  Lrelease=$4
 
   echo "Downloading and building $Lsubdir version $Lver"
 
-  get_source $Lsubdir $Lver $Lrelease
+  get_source $Lsubdir $Lid $Lver $Lrelease
 
   extract_source $Lsubdir $Lver $Lrelease
 
-  build_source $SOURCESUBDIR $Lrelease
+  build_source $Lsubdir $Lver $Lrelease
 
 }
 
@@ -206,16 +224,18 @@ cd ${WORKDIR}
 echo "exporting PGK_CONFIG_PATH"
 export PKG_CONFIG_PATH=/opt/openvas/lib/pkgconfig
 
+wget --no-check-certificate https://svn.wald.intevation.org/svn/openvas/trunk/tools/openvas-check-setup
 
-get_build $LIBRARIES $LIBRARIESVER $VERSION
+get_build $LIBRARIES $LIBRARIESID $LIBRARIESVER $VERSION
 
-get_build $SCANNER $SCANNERVER $VERSION
+get_build $SCANNER $SCANNERID $SCANNERVER $VERSION
 
-get_build $MANAGER $MANAGERVER $VERSION
+get_build $MANAGER $MANAGERID $MANAGERVER $VERSION
 
-get_build $GREENBONE $GREENBONEVER $VERSION
+get_build $GREENBONE $GREENBONEID $GREENBONEVER $VERSION
 
-get_build $CLI $CLIVER $VERSION
+get_build $CLI $CLIID $CLIVER $VERSION
 
+configure_app
 
 
